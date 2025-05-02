@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ValiantBot": {
+      "commandName": "Project",
+      "workingDirectory": "C:\\Users\\Shawb\\Desktop\\Development\\Discord Bots\\ValiantBot"
+    }
+  }
+}
