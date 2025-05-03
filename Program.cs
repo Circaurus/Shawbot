@@ -1,5 +1,6 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
 using DSharpPlus.SlashCommands;
 using OpenAI.Chat;
 
@@ -18,6 +19,8 @@ namespace Shawbot
             //Initialize OpenAI Client
             AIService chatService = new AIService();
 
+            //Get Memory Manager
+            MemoryManager memoryManager = MemoryManager.GetMMInstance();
             //Initialize Discord Client
             DiscordClient discord = new DiscordClient(new DiscordConfiguration()
             {
@@ -27,8 +30,8 @@ namespace Shawbot
             });
 
             //Register Command Modules
-            var slash = discord.UseSlashCommands();
-            slash.RegisterCommands<CoreCommandModule>(954563370294607914);
+            SlashCommandsExtension slash = discord.UseSlashCommands();
+            slash.RegisterCommands<CoreCommandModule>(133155376332931072);
 
             //Activity
             DiscordActivity activity = new();
@@ -38,25 +41,23 @@ namespace Shawbot
                 await discord.UpdateStatusAsync(activity);
 
 
-
-
-            //Dictionary<string, TaskCompletionSource<string>> _LLMTasks = new Dictionary<string, TaskCompletionSource<string>>();
-
-            /*
-            string userId = e.User.Id.ToString();
-            if (!_LLMTasks.ContainsKey(userId))
-            {
-                _LLMTasks[userId] = new TaskCompletionSource<string>();
-            }*/
+            List<ChatMessage> memories;
 
             discord.MessageCreated += async (client, e) =>
             {
-                if (e.Message.Content.Contains("shawbot", StringComparison.OrdinalIgnoreCase))
+                if (e.Message.Content.Contains("shawbot", StringComparison.OrdinalIgnoreCase) && (e.Channel.Id == 1362185428584890469 || e.Channel.Id == 1367207986199662662) && e.Message.Author.Id != 1367155472720990319)
                 {
-                    string response = await chatService.GetAIResponse(e.Message.Content);
+                    Console.WriteLine("Pulling Memory");
+                    memories = memoryManager.PullMemory();
+
+                    Console.WriteLine("Generating Response");
+                    string response = await chatService.GetAIResponse(e, memories);
 
                     await e.Message.RespondAsync(response);
                 }
+
+                //Update Short Term Memory
+                memoryManager.UpdateMemory(e);
             };
 
 
